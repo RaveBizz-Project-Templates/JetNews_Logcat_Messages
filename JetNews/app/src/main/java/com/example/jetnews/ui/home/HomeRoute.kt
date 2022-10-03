@@ -16,19 +16,14 @@
 
 package com.example.jetnews.ui.home
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import com.example.jetnews.ui.article.ArticleScreen
-import com.example.jetnews.ui.home.HomeScreenType.ArticleDetails
-import com.example.jetnews.ui.home.HomeScreenType.Feed
-import com.example.jetnews.ui.home.HomeScreenType.FeedWithArticleDetails
+import com.example.jetnews.ui.home.HomeScreenType.*
 
 /**
  * Displays the Home route.
@@ -40,6 +35,8 @@ import com.example.jetnews.ui.home.HomeScreenType.FeedWithArticleDetails
  * @param openDrawer (event) request opening the app drawer
  * @param snackbarHostState (state) state for the [Scaffold] component on this screen
  */
+private const val TAG = "HomeRoute"
+
 @Composable
 fun HomeRoute(
     homeViewModel: HomeViewModel,
@@ -49,17 +46,39 @@ fun HomeRoute(
 ) {
     // UiState of the HomeScreen
     val uiState by homeViewModel.uiState.collectAsState()
+    Log.v(TAG, "In home route with state, has uiState : ${uiState is HomeUiState.HasPosts}")
 
     HomeRoute(
         uiState = uiState,
         isExpandedScreen = isExpandedScreen,
-        onToggleFavorite = { homeViewModel.toggleFavourite(it) },
-        onSelectPost = { homeViewModel.selectArticle(it) },
-        onRefreshPosts = { homeViewModel.refreshPosts() },
-        onErrorDismiss = { homeViewModel.errorShown(it) },
-        onInteractWithFeed = { homeViewModel.interactedWithFeed() },
-        onInteractWithArticleDetails = { homeViewModel.interactedWithArticleDetails(it) },
-        onSearchInputChanged = { homeViewModel.onSearchInputChanged(it) },
+        onToggleFavorite = {
+            Log.v(TAG, "onToggleFavorite: toggling favorite $it")
+            homeViewModel.toggleFavourite(it)
+        },
+        onSelectPost = {
+            Log.v(TAG, "onSelectPost: post was selected -> $it")
+            homeViewModel.selectArticle(it)
+        },
+        onRefreshPosts = {
+            Log.v(TAG, "onRefreshPosts: refreshing the posts.")
+            homeViewModel.refreshPosts()
+        },
+        onErrorDismiss = {
+            Log.v(TAG, "onErrorDismiss: dismissing ...$it")
+            homeViewModel.errorShown(it)
+        },
+        onInteractWithFeed = {
+            Log.v(TAG, "Handling feed interaction.")
+            homeViewModel.interactedWithFeed()
+        },
+        onInteractWithArticleDetails = {
+            Log.v(TAG, "onInteractWithArticleDetails: interacting with details..... $it")
+            homeViewModel.interactedWithArticleDetails(it)
+        },
+        onSearchInputChanged = {
+            Log.v(TAG, "onSearchInputChanged: input text was $it")
+            homeViewModel.onSearchInputChanged(it)
+        },
         openDrawer = openDrawer,
         snackbarHostState = snackbarHostState,
     )
@@ -96,6 +115,8 @@ fun HomeRoute(
     openDrawer: () -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
+    Log.v(TAG, "Stateless HomeRoute: Change in uiState: searching for ${uiState.searchInput}, " +
+            "\nstate-> ${uiState.errorMessages}")
     // Construct the lazy list states for the list and the details outside of deciding which one to
     // show. This allows the associated state to survive beyond that decision, and therefore
     // we get to preserve the scroll throughout any changes to the content.
@@ -109,9 +130,12 @@ fun HomeRoute(
         }
     }
 
+    Log.i(TAG, "Stateless HomeRoute: getting homeScreenType")
     val homeScreenType = getHomeScreenType(isExpandedScreen, uiState)
+    Log.d(TAG, "Stateless HomeRoute: homeScreenType is $homeScreenType")
     when (homeScreenType) {
         HomeScreenType.FeedWithArticleDetails -> {
+            Log.d(TAG, "heading to HomeFeedWithArticleDetailsScreen. uiState: $uiState")
             HomeFeedWithArticleDetailsScreen(
                 uiState = uiState,
                 showTopAppBar = !isExpandedScreen,
@@ -129,6 +153,10 @@ fun HomeRoute(
             )
         }
         HomeScreenType.Feed -> {
+            Log.v(
+                TAG,
+                "heading to HomeFeedScreen. uiState has posts: ${uiState is HomeUiState.HasPosts}"
+            )
             HomeFeedScreen(
                 uiState = uiState,
                 showTopAppBar = !isExpandedScreen,
@@ -143,15 +171,21 @@ fun HomeRoute(
             )
         }
         HomeScreenType.ArticleDetails -> {
+            Log.v(TAG, "checking uiState using 'check()' method.")
             // Guaranteed by above condition for home screen type
             check(uiState is HomeUiState.HasPosts)
 
+            Log.v(TAG, "Heading to Article Screen. selected post is= ${uiState.selectedPost}")
             ArticleScreen(
                 post = uiState.selectedPost,
                 isExpandedScreen = isExpandedScreen,
                 onBack = onInteractWithFeed,
                 isFavorite = uiState.favorites.contains(uiState.selectedPost.id),
                 onToggleFavorite = {
+                    Log.v(
+                        TAG,
+                        "onToggleFavorite: making ${uiState.selectedPost} a favorite post. passing ID."
+                    )
                     onToggleFavorite(uiState.selectedPost.id)
                 },
                 lazyListState = articleDetailLazyListStates.getValue(

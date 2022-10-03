@@ -16,13 +16,19 @@
 
 package com.example.jetnews.ui
 
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalContext
 import androidx.core.view.WindowCompat
 import com.example.jetnews.JetnewsApplication
+
+private const val TAG = "MainActivity"
 
 class MainActivity : ComponentActivity() {
 
@@ -33,8 +39,14 @@ class MainActivity : ComponentActivity() {
 
         val appContainer = (application as JetnewsApplication).container
         setContent {
+            Log.v(TAG, "In the oncreate is where it all begins, this is the main activity.")
             val widthSizeClass = calculateWindowSizeClass(this).widthSizeClass
             JetnewsApp(appContainer, widthSizeClass)
         }
     }
+}
+
+
+fun CompositionLocalContext.log(tag: String, message: String) {
+    Log.v(tag, message)
 }

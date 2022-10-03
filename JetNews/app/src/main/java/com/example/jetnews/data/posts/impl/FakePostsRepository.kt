@@ -56,6 +56,8 @@ class FakePostsRepository : PostsRepository {
 
     override suspend fun getPostsFeed(): Result<PostsFeed> {
         return withContext(Dispatchers.IO) {
+            throw Exception("ErrrMaGERRRD: Its an error!!")
+            // assert(posts.allPosts.isEmpty())
             delay(800) // pretend we're on a slow network
             if (shouldRandomlyFail()) {
                 Result.Error(IllegalStateException())

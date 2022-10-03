@@ -16,6 +16,7 @@
 
 package com.example.jetnews.ui
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -29,6 +30,7 @@ import com.example.jetnews.ui.home.HomeViewModel
 import com.example.jetnews.ui.interests.InterestsRoute
 import com.example.jetnews.ui.interests.InterestsViewModel
 
+private const val TAG = "JetnewsNavGraph"
 @Composable
 fun JetnewsNavGraph(
     appContainer: AppContainer,
@@ -44,6 +46,7 @@ fun JetnewsNavGraph(
         modifier = modifier
     ) {
         composable(JetnewsDestinations.HOME_ROUTE) {
+            Log.v(TAG, "Home route being drawn.")
             val homeViewModel: HomeViewModel = viewModel(
                 factory = HomeViewModel.provideFactory(appContainer.postsRepository)
             )
@@ -54,6 +57,7 @@ fun JetnewsNavGraph(
             )
         }
         composable(JetnewsDestinations.INTERESTS_ROUTE) {
+            Log.v(TAG, "Interests route being drawn.")
             val interestsViewModel: InterestsViewModel = viewModel(
                 factory = InterestsViewModel.provideFactory(appContainer.interestsRepository)
             )

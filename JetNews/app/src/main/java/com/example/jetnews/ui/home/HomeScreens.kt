@@ -18,60 +18,22 @@ package com.example.jetnews.ui.home
 
 import android.content.Context
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.TopAppBarState
-import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -222,6 +184,8 @@ private fun Modifier.notifyInput(block: () -> Unit): Modifier =
 /**
  * The home screen displaying just the article feed.
  */
+private const val TAG = "HomeFeed"
+
 @Composable
 fun HomeFeedScreen(
     uiState: HomeUiState,
@@ -237,6 +201,7 @@ fun HomeFeedScreen(
     searchInput: String = "",
     onSearchInputChanged: (String) -> Unit,
 ) {
+    Log.v(TAG, "HomeFeedScreen: uiState: $uiState, \n showTopAppBar:$showTopAppBar.")
     HomeScreenWithList(
         uiState = uiState,
         showTopAppBar = showTopAppBar,
@@ -246,6 +211,12 @@ fun HomeFeedScreen(
         snackbarHostState = snackbarHostState,
         modifier = modifier
     ) { hasPostsUiState, contentModifier ->
+        Log.v(
+            TAG,
+            "HomeFeedScreen: postFeed: ${hasPostsUiState.postsFeed}, " +
+                    "\n favorites: ${hasPostsUiState.favorites}  " +
+                    "\n drawing PostList."
+        )
         PostList(
             postsFeed = hasPostsUiState.postsFeed,
             favorites = hasPostsUiState.favorites,
@@ -288,12 +259,14 @@ private fun HomeScreenWithList(
         modifier: Modifier
     ) -> Unit
 ) {
+    Log.v(TAG, "HomeScreenWithList: showTopAppbar: $showTopAppBar, state: $uiState")
     val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
     Scaffold(
         snackbarHost = { JetnewsSnackbarHost(hostState = snackbarHostState) },
         topBar = {
             if (showTopAppBar) {
+                Log.v(TAG, "HomeScreenWithList: showing the TopAppBar")
                 HomeTopAppBar(
                     openDrawer = openDrawer,
                     topAppBarState = topAppBarState
@@ -420,12 +393,17 @@ private fun PostList(
     searchInput: String = "",
     onSearchInputChanged: (String) -> Unit,
 ) {
+    Log.v(
+        TAG,
+        "PostList: feed: $postsFeed,favorite: $favorites, showExpandedSearch: $showExpandedSearch"
+    )
     LazyColumn(
         modifier = modifier,
         contentPadding = contentPadding,
         state = state
     ) {
         if (showExpandedSearch) {
+            Log.v(TAG, "PostList: showing expanded search, searchInput: $searchInput")
             item {
                 HomeSearch(
                     Modifier.padding(horizontal = 16.dp),
@@ -434,9 +412,14 @@ private fun PostList(
                 )
             }
         }
-        item { PostListTopSection(postsFeed.highlightedPost, onArticleTapped) }
+        item {
+            Log.v(TAG, "PostList: adding highlighted post ${postsFeed.highlightedPost}")
+            PostListTopSection(postsFeed.highlightedPost, onArticleTapped)
+        }
         if (postsFeed.recommendedPosts.isNotEmpty()) {
+            Log.v(TAG, "PostList: recommended posts available.")
             item {
+                Log.v(TAG, "PostList: adding recommended posts ${postsFeed.recommendedPosts}")
                 PostListSimpleSection(
                     postsFeed.recommendedPosts,
                     onArticleTapped,
@@ -446,14 +429,21 @@ private fun PostList(
             }
         }
         if (postsFeed.popularPosts.isNotEmpty() && !showExpandedSearch) {
+            Log.v(TAG, "PostList: popular posts available.")
             item {
+                Log.v(TAG, "PostList: adding popular posts ${postsFeed.popularPosts}")
                 PostListPopularSection(
                     postsFeed.popularPosts, onArticleTapped
                 )
             }
         }
         if (postsFeed.recentPosts.isNotEmpty()) {
-            item { PostListHistorySection(postsFeed.recentPosts, onArticleTapped) }
+            Log.v(TAG, "PostList: Post history available.")
+
+            item {
+                Log.v(TAG, "PostList: adding recent posts ${postsFeed.recentPosts}")
+                PostListHistorySection(postsFeed.recentPosts, onArticleTapped)
+            }
         }
     }
 }
@@ -480,6 +470,7 @@ private fun FullScreenLoading() {
  */
 @Composable
 private fun PostListTopSection(post: Post, navigateToArticle: (String) -> Unit) {
+    Log.v(TAG, "PostListTopSection: new post ${post.title}")
     Text(
         modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
         text = stringResource(id = R.string.home_top_section_title),
@@ -487,7 +478,10 @@ private fun PostListTopSection(post: Post, navigateToArticle: (String) -> Unit) 
     )
     PostCardTop(
         post = post,
-        modifier = Modifier.clickable(onClick = { navigateToArticle(post.id) })
+        modifier = Modifier.clickable(onClick = {
+            Log.v(TAG, "PostListTopSection: navigating to post '${post.title}' with id ${post.id}")
+            navigateToArticle(post.id)
+        })
     )
     PostListDivider()
 }
@@ -505,13 +499,18 @@ private fun PostListSimpleSection(
     favorites: Set<String>,
     onToggleFavorite: (String) -> Unit
 ) {
+    Log.v(TAG, "PostListSimpleSection: new posts to  display.")
     Column {
         posts.forEach { post ->
+            Log.v(TAG, "PostListSimpleSection: post to display -> ${post.title}")
             PostCardSimple(
                 post = post,
                 navigateToArticle = navigateToArticle,
                 isFavorite = favorites.contains(post.id),
-                onToggleFavorite = { onToggleFavorite(post.id) }
+                onToggleFavorite = {
+                    Log.v(TAG, "onToggleFavorite: toggling favorite for title '${post.title}'")
+                    onToggleFavorite(post.id)
+                }
             )
             PostListDivider()
         }
@@ -529,6 +528,7 @@ private fun PostListPopularSection(
     posts: List<Post>,
     navigateToArticle: (String) -> Unit
 ) {
+    Log.v(TAG, "PostListPopularSection: displaying popular posts.")
     Column {
         Text(
             modifier = Modifier.padding(16.dp),
@@ -540,6 +540,7 @@ private fun PostListPopularSection(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(posts) { post ->
+                Log.v(TAG, "PostListPopularSection: popular post -> ${post.title}")
                 PostCardPopular(
                     post,
                     navigateToArticle
@@ -562,8 +563,10 @@ private fun PostListHistorySection(
     posts: List<Post>,
     navigateToArticle: (String) -> Unit
 ) {
+    Log.v(TAG, "PostListHistorySection: posting posts based on your history.")
     Column {
         posts.forEach { post ->
+            Log.v(TAG, "PostListSimpleSection: Historic post -> ${post.title}")
             PostCardHistory(post, navigateToArticle)
             PostListDivider()
         }
@@ -594,6 +597,7 @@ private fun HomeSearch(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    Log.v(TAG, "HomeSearch: search input was $searchInput")
     OutlinedTextField(
         value = searchInput,
         onValueChange = onSearchInputChanged,

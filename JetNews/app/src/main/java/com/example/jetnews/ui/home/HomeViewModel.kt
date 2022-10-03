@@ -16,6 +16,7 @@
 
 package com.example.jetnews.ui.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -25,14 +26,11 @@ import com.example.jetnews.data.posts.PostsRepository
 import com.example.jetnews.model.Post
 import com.example.jetnews.model.PostsFeed
 import com.example.jetnews.utils.ErrorMessage
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.UUID
+import kotlinx.coroutines.supervisorScope
+import java.util.*
 
 /**
  * UI state for the Home route.
@@ -123,6 +121,8 @@ class HomeViewModel(
     private val postsRepository: PostsRepository
 ) : ViewModel() {
 
+    private val TAG = "HomeViewModel"
+
     private val viewModelState = MutableStateFlow(HomeViewModelState(isLoading = true))
 
     // UI state exposed to the UI
@@ -140,6 +140,10 @@ class HomeViewModel(
         // Observe for favorite changes in the repo layer
         viewModelScope.launch {
             postsRepository.observeFavorites().collect { favorites ->
+                Log.v(
+                    TAG, "Observed favorites: fav list size: ${favorites.size}," +
+                            " adding and updating ${favorites.lastOrNull()}"
+                )
                 viewModelState.update { it.copy(favorites = favorites) }
             }
         }
@@ -149,11 +153,14 @@ class HomeViewModel(
      * Refresh posts and update the UI state accordingly
      */
     fun refreshPosts() {
+        Log.v(TAG, "Refreshing posts.")
         // Ui state is refreshing
         viewModelState.update { it.copy(isLoading = true) }
 
         viewModelScope.launch {
+            Log.v(TAG, "refreshPosts: asking repo for posts.")
             val result = postsRepository.getPostsFeed()
+            Log.v(TAG, "refreshPosts: result was $result, updating viewModelState variable.")
             viewModelState.update {
                 when (result) {
                     is Result.Success -> it.copy(postsFeed = result.data, isLoading = false)
@@ -174,6 +181,7 @@ class HomeViewModel(
      */
     fun toggleFavourite(postId: String) {
         viewModelScope.launch {
+            Log.v(TAG, "toggleFavorite: asking repo to toggle favorite for id: $postId")
             postsRepository.toggleFavorite(postId)
         }
     }
@@ -183,6 +191,7 @@ class HomeViewModel(
      */
     fun selectArticle(postId: String) {
         // Treat selecting a detail as simply interacting with it
+        Log.v(TAG, "selected post with id $postId, heading to interactedWithArticleDetails method.")
         interactedWithArticleDetails(postId)
     }
 
@@ -190,8 +199,10 @@ class HomeViewModel(
      * Notify that an error was displayed on the screen
      */
     fun errorShown(errorId: Long) {
+        Log.v(TAG, "errorShown: Oh k-no-w!!! there was an error. ErrorID: $errorId")
         viewModelState.update { currentUiState ->
             val errorMessages = currentUiState.errorMessages.filterNot { it.id == errorId }
+            Log.v(TAG, "errorShown: errorMessages: $errorMessages")
             currentUiState.copy(errorMessages = errorMessages)
         }
     }
@@ -200,6 +211,7 @@ class HomeViewModel(
      * Notify that the user interacted with the feed
      */
     fun interactedWithFeed() {
+        Log.v(TAG, "interactedWitFeed: no data passed. ")
         viewModelState.update {
             it.copy(isArticleOpen = false)
         }
@@ -209,6 +221,10 @@ class HomeViewModel(
      * Notify that the user interacted with the article details
      */
     fun interactedWithArticleDetails(postId: String) {
+        Log.v(
+            TAG,
+            "interactedWithArticleDetails: updating viewmodelState. setting selectedPostId to $postId"
+        )
         viewModelState.update {
             it.copy(
                 selectedPostId = postId,
@@ -221,6 +237,7 @@ class HomeViewModel(
      * Notify that the user updated the search query
      */
     fun onSearchInputChanged(searchInput: String) {
+        Log.v(TAG, "onSearchInputChanged: changing searchInput to $searchInput")
         viewModelState.update {
             it.copy(searchInput = searchInput)
         }

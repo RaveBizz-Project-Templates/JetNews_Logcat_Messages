@@ -16,6 +16,7 @@
 
 package com.example.jetnews.ui
 
+import android.util.Log
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -33,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -42,12 +44,15 @@ import com.example.jetnews.ui.components.AppNavRail
 import com.example.jetnews.ui.theme.JetnewsTheme
 import kotlinx.coroutines.launch
 
+
+private const val TAG = "JetnewsApp"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JetnewsApp(
     appContainer: AppContainer,
     widthSizeClass: WindowWidthSizeClass
 ) {
+    Log.v(TAG, "Drawing the App.")
     JetnewsTheme {
         val navController = rememberNavController()
         val navigationActions = remember(navController) {
@@ -84,6 +89,7 @@ fun JetnewsApp(
                         navigateToInterests = navigationActions.navigateToInterests,
                     )
                 }
+                Log.v(TAG, "In modal, adding jet news Graph.")
                 JetnewsNavGraph(
                     appContainer = appContainer,
                     isExpandedScreen = isExpandedScreen,

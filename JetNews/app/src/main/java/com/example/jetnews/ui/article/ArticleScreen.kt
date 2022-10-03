@@ -19,6 +19,7 @@ package com.example.jetnews.ui.article
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,19 +30,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -78,6 +67,8 @@ import kotlinx.coroutines.runBlocking
  * @param onToggleFavorite (event) request that this post toggle it's favorite state
  * @param lazyListState (state) the [LazyListState] for the article content
  */
+private const val TAG = "ArticleScreen"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArticleScreen(
@@ -89,6 +80,7 @@ fun ArticleScreen(
     modifier: Modifier = Modifier,
     lazyListState: LazyListState = rememberLazyListState()
 ) {
+    Log.v(TAG, "ArticleScreen: state holding screen, drawing new post: $post")
     var showUnimplementedActionDialog by rememberSaveable { mutableStateOf(false) }
     if (showUnimplementedActionDialog) {
         FunctionalityNotAvailablePopup { showUnimplementedActionDialog = false }
@@ -115,7 +107,10 @@ fun ArticleScreen(
                 if (!isExpandedScreen) {
                     BottomAppBar(
                         actions = {
-                            FavoriteButton(onClick = { showUnimplementedActionDialog = true })
+                            FavoriteButton(onClick = {
+                                Log.v(TAG, "TODO: implement room and save this as a favorite.")
+                                showUnimplementedActionDialog = true
+                            })
                             BookmarkButton(isBookmarked = isFavorite, onClick = onToggleFavorite)
                             ShareButton(onClick = { sharePost(post, context) })
                             TextSettingsButton(onClick = { showUnimplementedActionDialog = true })
@@ -143,6 +138,7 @@ private fun ArticleScreenContent(
     bottomBarContent: @Composable () -> Unit = { },
     lazyListState: LazyListState = rememberLazyListState()
 ) {
+    Log.v(TAG, "ArticleScreenContent: displaying new post $post")
     val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(topAppBarState)
     Scaffold(
